@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>格式化完成 - 公文格式化</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>📄</text></svg>">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #2c3e50;
+        }
+
+        .header {
+            padding: 32px 0 28px;
+            text-align: center;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+            padding: 44px 40px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .badge {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e0f7ec 0%, #c8f0d6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .card h2 { font-size: 20px; font-weight: 600; color: #1a1a2e; margin-bottom: 6px; }
+        .card .meta { color: #94a3b8; font-size: 13px; margin-bottom: 28px; word-break: break-all; }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 13px 32px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 14px rgba(102,126,234,0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+            color: white;
+            text-decoration: none;
+        }
+        .btn-outline {
+            background: white;
+            color: #64748b;
+            border: 1.5px solid #e2e8f0;
+        }
+        .btn-outline:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            text-decoration: none;
+            color: #475569;
+        }
+
+        .warnings {
+            margin-top: 28px;
+            text-align: left;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 24px;
+            display: none;
+        }
+        .warnings.show { display: block; }
+        .warnings h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #d97706;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .warnings ul {
+            list-style: none;
+            font-size: 12px;
+            color: #64748b;
+            max-height: 240px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .warnings ul::-webkit-scrollbar { width: 4px; }
+        .warnings ul::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+        .warnings li {
+            padding: 7px 10px;
+            background: #fffbeb;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+        .warnings li .tag {
+            display: inline-block;
+            background: #fef3c7;
+            color: #b45309;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>格式化完成</h1>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="badge">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <h2>文档已格式化</h2>
+            <p class="meta">{{ filename }}</p>
+
+            <div class="btn-group">
+                <a href="{{ url_for('download', name=download_name) }}" class="btn btn-primary" id="downloadBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    下载文档
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline">重新上传</a>
+            </div>
+
+            {% if warnings %}
+            <div class="warnings show">
+                <h3>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    审查提示（{{ warnings|length }} 条）
+                </h3>
+                <ul>
+                    {% for w in warnings %}
+                    <li><span class="tag">{{ w.type }}</span>{{ w.detail[:120] }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="footer">处理完成后文件自动删除，不会保存</div>
+
+    <script>
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            // 延迟 15 秒清理文件，确保下载请求先到达服务器，避免竞态条件
+            setTimeout(function() {
+                fetch('{{ url_for("cleanup", name=download_name) }}');
+            }, 15000);
+        });
+    </script>
+</body>
+</html>

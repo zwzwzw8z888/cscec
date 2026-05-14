@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公文格式化</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>📄</text></svg>">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #2c3e50;
+        }
+
+        .header {
+            padding: 32px 0 28px;
+            text-align: center;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .header .logo {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            color: white;
+            font-size: 24px;
+        }
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a1a2e;
+            letter-spacing: 1px;
+        }
+        .header p {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+            padding: 44px 40px;
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+        }
+
+        .upload-zone {
+            border: 2px dashed #dce1e8;
+            border-radius: 12px;
+            padding: 44px 20px;
+            margin-bottom: 20px;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            background: #fafbfc;
+        }
+        .upload-zone:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.08);
+        }
+        .upload-zone.dragover {
+            border-color: #667eea;
+            background: #eef1ff;
+            transform: scale(1.01);
+        }
+        .upload-zone .icon {
+            margin-bottom: 16px;
+        }
+        .upload-zone .hint {
+            color: #475569;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .upload-zone .hint span {
+            color: #667eea;
+        }
+        .upload-zone .sub {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .file-badge {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #f0f4ff;
+            color: #4f46e5;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 18px;
+        }
+        .file-badge.show { display: flex; }
+        .file-badge .remove {
+            cursor: pointer;
+            font-size: 16px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .file-badge .remove:hover { opacity: 1; }
+
+        .btn {
+            border: none;
+            padding: 13px 48px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 14px rgba(102,126,234,0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+        }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-primary:disabled {
+            background: #dce1e8;
+            color: #94a3b8;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .flash {
+            padding: 10px 18px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            text-align: left;
+        }
+        .flash.error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+
+        input[type="file"] { display: none; }
+
+        .spec-card {
+            margin-top: 36px;
+            text-align: left;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 24px;
+        }
+        .spec-card h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 14px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .spec-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 8px 16px;
+            font-size: 12px;
+            color: #94a3b8;
+            justify-content: center;
+        }
+        .spec-grid .label { text-align: right; font-weight: 500; color: #64748b; }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+
+        /* Loading state */
+        .btn-primary.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        .spinner {
+            display: none;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        .btn-primary.loading .spinner { display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .loading-overlay.show { display: flex; }
+        .loading-overlay .dot-pulse {
+            display: flex;
+            gap: 8px;
+        }
+        .loading-overlay .dot-pulse span {
+            width: 10px; height: 10px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: bounce 0.5s alternate infinite;
+        }
+        .loading-overlay .dot-pulse span:nth-child(2) { animation-delay: 0.15s; }
+        .loading-overlay .dot-pulse span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes bounce { from { transform: translateY(0); opacity: 0.4; } to { transform: translateY(-12px); opacity: 1; } }
+        .loading-overlay p {
+            color: #475569;
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <h1>公文格式化</h1>
+        <p>上传 .docx 文档，一键转换为标准公文格式</p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            {% for category, msg in get_flashed_messages(with_categories=True) %}
+            <div class="flash {{ category }}">{{ msg }}</div>
+            {% endfor %}
+
+            <form action="/format" method="post" enctype="multipart/form-data" id="uploadForm">
+                <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="icon">
+                        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                    <div class="hint">拖拽文件到此处，或 <span>点击选择</span></div>
+                    <div class="sub">支持 .docx 格式，最大 16MB</div>
+                </div>
+                <div class="file-badge" id="fileBadge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span id="fileBadgeText"></span>
+                    <span class="remove" onclick="event.stopPropagation(); removeFile();">&times;</span>
+                </div>
+                <input type="file" name="file" id="fileInput" accept=".docx" required>
+                <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                    <span class="spinner"></span>开始格式化
+                </button>
+            </form>
+
+            <div class="spec-card">
+                <h3>格式规范</h3>
+                <div class="spec-grid">
+                    <span class="label">页面</span><span>A4 · 上3.7 下3.5 左2.8 右2.6cm</span>
+                    <span class="label">标题</span><span>方正小标宋简体 · 二号</span>
+                    <span class="label">一级标题</span><span>黑体 · 三号</span>
+                    <span class="label">二级标题</span><span>楷体_GB2312 · 三号</span>
+                    <span class="label">正文</span><span>仿宋_GB2312 · 三号 · 28.9磅</span>
+                    <span class="label">表格</span><span>仿宋_GB2312 · 小四</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">上传的文件仅用于格式化，处理完成后自动删除</div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="dot-pulse">
+            <span></span><span></span><span></span>
+        </div>
+        <p>正在格式化文档...</p>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileBadge = document.getElementById('fileBadge');
+        const fileBadgeText = document.getElementById('fileBadgeText');
+        const submitBtn = document.getElementById('submitBtn');
+        const dropZone = document.getElementById('dropZone');
+
+        function setFile(file) {
+            if (file) {
+                fileBadgeText.textContent = file.name;
+                fileBadge.classList.add('show');
+                submitBtn.disabled = false;
+            }
+        }
+
+        function removeFile() {
+            fileInput.value = '';
+            fileBadge.classList.remove('show');
+            submitBtn.disabled = true;
+            fileBadgeText.textContent = '';
+        }
+
+        fileInput.addEventListener('change', function() {
+            if (this.files.length) setFile(this.files[0]);
+        });
+
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', function() {
+            this.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                setFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', function() {
+            submitBtn.classList.add('loading');
+            submitBtn.querySelector('.spinner').style.display = 'inline-block';
+            document.getElementById('loadingOverlay').classList.add('show');
+        });
+    </script>
+</body>
+</html>
