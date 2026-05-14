@@ -98,11 +98,14 @@ def detect_level(text):
     return 'body'
 
 
-def is_main_title(text):
+def is_main_title(text, para_index=None):
     """判断文本是否是公文主标题
 
-    主标题特征：无编号前缀、无句号分号、较短（≤40字）、非日期、非数据行、非标签字段
+    主标题特征：无编号前缀、无句号分号、8-40字、非日期、非数据行、非标签字段、非问候语
+    位置限制：只在前 MAIN_TITLE_MAX_POSITION 个段落内检测主标题
     """
+    if para_index is not None and para_index > MAIN_TITLE_MAX_POSITION:
+        return False
     t = text.strip()
     if not t:
         return False
@@ -118,9 +121,9 @@ def is_main_title(text):
         return False
     if is_labeled_field(t):
         return False
-    if '。' in t or '；' in t:
+    if is_greeting(t):
         return False
-    if re.search(r'[：:]$', t) and re.search(r'领导|同事|各位|尊敬|您好|下午好|上午好|你好', t):
+    if '。' in t or '；' in t:
         return False
     if len(t) < MAIN_TITLE_MIN_CHARS:
         return False
@@ -238,8 +241,8 @@ def resolve_final_level(idx, item, promote_x_to_h1, promote_body_indices,
     if not text:
         return None
 
-    # 主标题
-    if is_main_title(text):
+    # 主标题（仅限文档前部）
+    if is_main_title(text, para_index=idx):
         return 'title'
 
     # 基础层级：文本编号前缀
