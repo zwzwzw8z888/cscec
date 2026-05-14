@@ -12,7 +12,7 @@ import json
 from detect import detect_level, is_main_title
 from constants import (
     has_text_number_prefix, CNUM_TO_INT, int_to_cn,
-    get_numbering_info,
+    get_numbering_info, is_labeled_field,
     AI_API_TIMEOUT, MIN_PARAGRAPH_CHARS, SHORT_TITLE_MAX_CHARS,
     COLON_GUIDE_MAX_AFTER, NO_CJK_PUNCT_MAX_CHARS,
     AI_BODY_CHECK_MIN, AI_BODY_CHECK_MAX,
@@ -97,6 +97,8 @@ def check_punctuation_issues(paragraphs_text, ai_cache=None):
         if not text or len(text) <= MIN_PARAGRAPH_CHARS:
             continue
         if is_main_title(text):
+            continue
+        if is_labeled_field(text):
             continue
         if re.match(r'^[一二三四五六七八九十]+、', text):
             continue
