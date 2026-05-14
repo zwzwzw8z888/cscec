@@ -225,9 +225,10 @@ def check_missing_h2(paragraphs_text, ai_cache=None):
         effective_level = level if level in ('h1', 'h2', 'h3', 'h4', 'h5') else detected
 
         is_digit_prefix = bool(re.match(r'^\d+[.、．]', text))
-        # 是否为正文：含句号/逗号/顿号/冒号、很长（>30字）、电话/邮箱/日期/时间等
+        # 是否为正文：含句号/逗号/顿号/冒号（末尾冒号不算）、很长（>30字）、电话/邮箱/日期/时间等
         is_likely_body = is_digit_prefix and (
-            '。' in text or '，' in text or '、' in text or '：' in text
+            '。' in text or '，' in text or '、' in text
+            or ('：' in text and not text.rstrip().endswith('：'))
             or '（' in text  # 括号人名（如"（陈漩莹）"）是正文标志
             or len(text) > MISSING_H2_LONG_BODY_MIN
             or bool(re.search(r'\d{11}', text))

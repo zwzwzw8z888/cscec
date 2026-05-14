@@ -163,7 +163,7 @@ def is_labeled_field(text):
 # -- 句末标点检查 (check_punctuation_issues) --
 MIN_PARAGRAPH_CHARS = 10          # 最小段落长度，短于此跳过
 SHORT_TITLE_MAX_CHARS = 30        # 有编号前缀+短于此→视为标题跳过
-COLON_GUIDE_MAX_AFTER = 30        # 冒号引导后内容短于此→视为标题引导跳过
+COLON_GUIDE_MAX_AFTER = 15        # 冒号引导后内容短于此→视为标题引导跳过
 NO_CJK_PUNCT_MAX_CHARS = 20       # 无中文标点且短于此→跳过
 AI_BODY_CHECK_MIN = 15            # AI兜底判断最小字数
 AI_BODY_CHECK_MAX = 30            # AI兜底判断最大字数
