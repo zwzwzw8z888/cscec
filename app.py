@@ -3,17 +3,11 @@
 """中建四局公文格式化 Web 服务"""
 
 import os
-import sys
 import tempfile
 import uuid
 from pathlib import Path
 
 from flask import Flask, request, render_template, send_file, redirect, url_for, flash
-
-# 技能目录加入路径，保证能导入格式化模块
-SKILL_DIR = Path(__file__).parent.parent / ".claude" / "skills" / "中建四局公文写作"
-if str(SKILL_DIR) not in sys.path:
-    sys.path.insert(0, str(SKILL_DIR))
 
 from formatter_core import format_document
 
