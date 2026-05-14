@@ -191,6 +191,7 @@ POST_TABLE_H1_MAX_CHARS = 20      # 表后短标题提升h1最大字数
 
 # -- 主标题 (is_main_title) --
 MAIN_TITLE_MAX_CHARS = 40         # 主标题最大字数
+MAIN_TITLE_MIN_CHARS = 8          # 主标题最小字数（短于此的不是标题）
 
 # -- 问候语 (is_greeting) --
 GREETING_MAX_CHARS = 30           # 问候语最大字数（正则中内联，记录于此）

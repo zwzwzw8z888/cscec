@@ -122,6 +122,8 @@ def is_main_title(text):
         return False
     if re.search(r'[：:]$', t) and re.search(r'领导|同事|各位|尊敬|您好|下午好|上午好|你好', t):
         return False
+    if len(t) < MAIN_TITLE_MIN_CHARS:
+        return False
     if len(t) > MAIN_TITLE_MAX_CHARS:
         return False
     return True
