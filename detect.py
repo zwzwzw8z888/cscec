@@ -101,7 +101,7 @@ def detect_level(text):
 def is_main_title(text):
     """判断文本是否是公文主标题
 
-    主标题特征：无编号前缀、无句号分号、较短（≤40字）、非日期、非数据行
+    主标题特征：无编号前缀、无句号分号、较短（≤40字）、非日期、非数据行、非标签字段
     """
     t = text.strip()
     if not t:
@@ -115,6 +115,8 @@ def is_main_title(text):
     if has_text_number_prefix(t):
         return False
     if is_pure_data_line(t):
+        return False
+    if is_labeled_field(t):
         return False
     if '。' in t or '；' in t:
         return False

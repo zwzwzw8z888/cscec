@@ -140,6 +140,23 @@ def is_verb_after_number(text):
     return bool(re.match(r'^\d+[.、．]\s*[是是以要为将把让使被]', text))
 
 
+def is_labeled_field(text):
+    """标签字段检测：培训地点：XXX / 授课方式：XXX / 会议时间：XXX 等元数据行
+    短标签（≤8字）+ 冒号 + 内容 → 不是标题，是正文字段
+    """
+    t = text.strip()
+    m = re.match(r'^(.{1,8})[：:](.{2,})$', t)
+    if not m:
+        return False
+    label, content = m.group(1), m.group(2)
+    # 标签部分不含编号前缀（一、/（一）/1. 等已在上层排除）
+    if re.match(r'^[一二三四五六七八九十]+、', label):
+        return False
+    if re.match(r'^（[一二三四五六七八九十]+）', label):
+        return False
+    return True
+
+
 # ────────────────────────── 检查规则阈值 ──────────────────────────
 # 所有规则中散落的魔数集中为命名常量，方便统一调整
 
