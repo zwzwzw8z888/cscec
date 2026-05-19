@@ -170,6 +170,15 @@ AI_BODY_CHECK_MAX = 30            # AI兜底判断最大字数
 
 # -- 编号格式检查 (check_word_numbering_format) --
 HEADING_LIKE_MAX_CHARS = 40       # 标题外观最大字数（无句号分号）
+# Word 编号格式：标准公文格式（不做警告）
+WNUM_STANDARD_FORMATS = frozenset({
+    'decimal',                       # 1. 2. 3. — 三级标题
+    'chineseCounting',               # 一、二、三、
+    'chineseCountingThousand',       # 一、二、三、
+    'ideographDigital',              # 一、二、三、
+    'ideographEnclosedCircle',       # ①②③
+    'decimalEnclosedCircleChinese',  # ①②③
+})
 
 # -- 缺失二级标题检查 (check_missing_h2) --
 MISSING_H2_BODY_MIN_CHARS = 25    # 正文判定最小字数

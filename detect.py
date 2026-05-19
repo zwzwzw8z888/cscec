@@ -241,8 +241,8 @@ def resolve_final_level(idx, item, promote_x_to_h1, promote_body_indices,
     if not text:
         return None
 
-    # 主标题（仅限文档前部）
-    if is_main_title(text, para_index=idx):
+    # 主标题（仅限文档前部，且不能有 Word 自动编号——自动编号说明是章节标题或列表项）
+    if item.num_id in (None, '0') and is_main_title(text, para_index=idx):
         return 'title'
 
     # 基础层级：文本编号前缀

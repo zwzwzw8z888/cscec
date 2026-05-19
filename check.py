@@ -17,6 +17,7 @@ from constants import (
     COLON_GUIDE_MAX_AFTER, NO_CJK_PUNCT_MAX_CHARS,
     AI_BODY_CHECK_MIN, AI_BODY_CHECK_MAX,
     HEADING_LIKE_MAX_CHARS, MISSING_H2_LONG_BODY_MIN,
+    WNUM_STANDARD_FORMATS,
     TRAILING_PUNCT_MIN_CHARS, TRAILING_PUNCT_BODY_LIKE_MIN,
     TRAILING_PUNCT_LONG_BODY_MIN, WNL_HEADING_MAX_CHARS,
     BODY_DEMOTE_MIN_CHARS,
@@ -157,7 +158,11 @@ def check_h3_numbering_issues(paragraphs_text):
 
 
 def check_word_numbering_format(paragraphs_text, num_to_abstract, abstract_num_defs):
-    """检测Word自动编号使用阿拉伯数字（1.2.3.）且文本像标题的情况"""
+    """检测Word自动编号使用非标准公文格式（如 a.b.c. I.II.III. 等）
+
+    只对非标准格式报警；decimal（1.2.3.）、chineseCounting（一、二、三、）、
+    ideographEnclosedCircle（①②③）等标准公文格式不报。
+    """
     issues = []
     for i, item in enumerate(paragraphs_text):
         if item[0] != 'p':
@@ -169,7 +174,7 @@ def check_word_numbering_format(paragraphs_text, num_to_abstract, abstract_num_d
         if level is not None:
             continue
         fmt, lvl_txt = get_numbering_info(item, num_to_abstract, abstract_num_defs)
-        if fmt is None or fmt != 'decimal':
+        if fmt is None or fmt in WNUM_STANDARD_FORMATS:
             continue
         is_like_heading = (
             len(text) <= HEADING_LIKE_MAX_CHARS

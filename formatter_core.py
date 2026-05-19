@@ -277,10 +277,10 @@ def format_document(src_path: str, dst_path: str):
             'detail': f'检测到 {len(h3_issues)} 处编号后直接跟动词：\n' + '\n'.join(detail_lines)
         })
 
-    # 检查Word自动编号格式（阿拉伯数字1.2.3.）— Bug 1修复
+    # 检查Word自动编号是否为非标准公文格式（如 a.b.c. I.II.III.）
     word_num_issues = check_word_numbering_format(paragraphs_text, num_to_abstract, abstract_num_defs)
     word_num_indices = {i for i, _ in word_num_issues}
-    
+
     # 检查 Word 编号分隔符（、．→ .）
     sep_issues = check_numbering_separator(paragraphs_text, num_to_abstract, abstract_num_defs)
     sep_indices = {i for i, _, _, _ in sep_issues}
@@ -293,20 +293,19 @@ def format_document(src_path: str, dst_path: str):
             'detail': f'检测到 {len(sep_issues)} 处编号后使用顿号或全角点，建议改为点号"."：\n' + '\n'.join(detail_lines)
         })
     
-    # 检查一级标题下直接使用三级标题的情况
-    missing_h2_issues = check_missing_h2(paragraphs_text, ai_cache=ai_cache)
-    missing_h2_indices = {i for i, _ in missing_h2_issues}  # 用于批注
     if word_num_issues:
         detail_lines = []
         for idx, txt in word_num_issues:
-            detail_lines.append(f'  段落{idx+1}: "{txt}" — 使用Word自动编号（1. 2. 3.）')
-        detail_lines.append('  建议：可改为①②③格式，请人工确认。')
+            detail_lines.append(f'  段落{idx+1}: "{txt}" — Word自动编号使用了非标准公文格式')
+        detail_lines.append('  建议：公文编号应使用一、（一）1.（1）①，请人工确认并修正。')
         warnings.append({
             'type': 'Word自动编号格式',
-            'detail': f'检测到 {len(word_num_issues)} 处Word自动编号（阿拉伯数字格式）：\n' + '\n'.join(detail_lines)
+            'detail': f'检测到 {len(word_num_issues)} 处Word自动编号使用非标准格式：\n' + '\n'.join(detail_lines)
         })
-    
+
     # 检查一级标题下直接使用三级标题的情况
+    missing_h2_issues = check_missing_h2(paragraphs_text, ai_cache=ai_cache)
+    missing_h2_indices = {i for i, _ in missing_h2_issues}  # 用于批注
     if missing_h2_issues:
         detail_lines = []
         for idx, txt in missing_h2_issues:
@@ -566,8 +565,8 @@ def format_document(src_path: str, dst_path: str):
                 next_has_wnum = (len(paragraphs_text[j]) > 4
                                  and paragraphs_text[j][4]
                                  and paragraphs_text[j][4] != '0')
-                should_merge = (next_is_bold
-                                or (not next_has_wnum and len(next_text) <= 15))
+                should_merge = not next_has_wnum and (next_is_bold
+                                or len(next_text) <= 15)
                 # 排除问候语/称呼（如"尊敬的各位领导："）
                 is_greet_text = next_text.startswith('尊敬') or '各位领导' in next_text
                 if next_text and is_main_title(next_text) and should_merge and not is_greet_text:
@@ -877,9 +876,10 @@ def format_document(src_path: str, dst_path: str):
                             prefix = lvl_txt.replace('%1', str(seq_val)) if lvl_txt else f'{seq_val}.'
                             display_text = prefix + text
                             # 提示可将编号改为①②③（用加前缀后的文本做锚点）
-                            comment_list.append((display_text[:30],
-                                f'原文使用Word自动编号（{prefix.strip()}），建议改为①②③格式',
-                                'number_prefix'))
+                            if fmt not in WNUM_STANDARD_FORMATS:
+                                comment_list.append((display_text[:30],
+                                    f'原文使用Word自动编号 [{prefix.strip()}]，已转为文字编号，请确认层级归属是否正确',
+                                    'number_prefix'))
                             # 审查提示：分隔符含顿号
                             if ('、' in prefix or '．' in prefix) and i in sep_indices:
                                 good = prefix.replace('、', '.').replace('．', '.')
@@ -935,10 +935,10 @@ def format_document(src_path: str, dst_path: str):
                 comment_list.append((text[:30],
                     discontinuous_seq_warnings[i],
                     'number_prefix'))
-            # Bug 1修复：Word自动编号格式批注
+
             if i in word_num_indices:
                 comment_list.append((text[:30],
-                    '原文使用Word自动编号（1. 2. 3.），建议改为①②③格式',
+                    'Word自动编号使用了非标准公文格式，请修改为 一、（一）1.（1）① 等标准格式',
                     'number_prefix'))
 
     # ──── 全局规则：落款格式处理 ────
