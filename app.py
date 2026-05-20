@@ -3,6 +3,7 @@
 """中建四局公文格式化 Web 服务"""
 
 import os
+import time
 import tempfile
 import uuid
 from pathlib import Path
@@ -15,8 +16,25 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-" + str(uuid.uuid4()))
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max
 
+EXPIRY_SECONDS = 10 * 60  # 文件10分钟后过期
+
 UPLOAD_DIR = Path(tempfile.gettempdir()) / "cscec-formatter"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# 内存中记录文件创建时间（服务重启后清空，与 /tmp 保持同步）
+_file_registry: dict[str, float] = {}
+
+
+def _cleanup_expired():
+    """清理过期文件"""
+    now = time.time()
+    expired = [
+        name for name, created in _file_registry.items()
+        if now - created > EXPIRY_SECONDS
+    ]
+    for name in expired:
+        (UPLOAD_DIR / name).unlink(missing_ok=True)
+        _file_registry.pop(name, None)
 
 
 @app.route("/")
@@ -35,6 +53,8 @@ def do_format():
         flash("仅支持 .docx 格式的 Word 文档", "error")
         return redirect(url_for("index"))
 
+    _cleanup_expired()
+
     uid = uuid.uuid4().hex[:8]
     src_path = UPLOAD_DIR / f"src_{uid}.docx"
     dst_temp = UPLOAD_DIR / f"out_{uid}.docx"
@@ -52,11 +72,15 @@ def do_format():
         # 清理源文件
         src_path.unlink(missing_ok=True)
 
+        # 注册文件，记录创建时间
+        _file_registry[download_name] = time.time()
+
         return render_template(
             "result.html",
             filename=file.filename,
             download_name=download_name,
             warnings=warnings,
+            expiry_minutes=EXPIRY_SECONDS // 60,
         )
 
     except Exception as e:
@@ -70,8 +94,17 @@ def do_format():
 @app.route("/download/<name>")
 def download(name):
     path = UPLOAD_DIR / name
+
+    # 检查是否过期
+    created = _file_registry.get(name)
+    if created and time.time() - created > EXPIRY_SECONDS:
+        path.unlink(missing_ok=True)
+        _file_registry.pop(name, None)
+        flash("文件已过期（超过10分钟），请重新上传格式化", "error")
+        return redirect(url_for("index"))
+
     if not path.exists():
-        flash("文件已过期或不存在，请重新上传", "error")
+        flash("文件不存在，请重新上传", "error")
         return redirect(url_for("index"))
     return send_file(path, as_attachment=True, download_name=name, mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
@@ -80,6 +113,7 @@ def download(name):
 def cleanup(name):
     """下载完成后清理输出文件"""
     (UPLOAD_DIR / name).unlink(missing_ok=True)
+    _file_registry.pop(name, None)
     return "", 204
 
 

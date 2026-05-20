@@ -148,6 +148,32 @@
             margin-right: 6px;
         }
 
+        .expiry-notice {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #d97706;
+            background: #fffbeb;
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .expiry-notice.warning { color: #dc2626; background: #fef2f2; }
+        .expiry-expired {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #dc2626;
+            background: #fef2f2;
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
         .footer {
             text-align: center;
             padding: 20px;
@@ -169,12 +195,24 @@
             <h2>文档已格式化</h2>
             <p class="meta">{{ filename }}</p>
 
-            <div class="btn-group">
+            <div class="expiry-notice" id="expiryNotice">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span id="expiryText">文件保留 <strong id="countdown">{{ expiry_minutes }}:00</strong>，请尽快下载</span>
+            </div>
+            <div class="expiry-expired" id="expiryExpired" style="display:none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <span>文件已过期，请重新上传</span>
+            </div>
+
+            <div class="btn-group" id="btnGroup">
                 <a href="{{ url_for('download', name=download_name) }}" class="btn btn-primary" id="downloadBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     下载文档
                 </a>
                 <a href="{{ url_for('index') }}" class="btn btn-outline">重新上传</a>
+            </div>
+            <div class="btn-group" id="btnGroupExpired" style="display:none;">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">重新上传文件</a>
             </div>
 
             {% if warnings %}
@@ -193,10 +231,42 @@
         </div>
     </div>
 
-    <div class="footer">处理完成后文件自动删除，不会保存</div>
+    <div class="footer">文件保留 {{ expiry_minutes }} 分钟，超时自动删除</div>
 
     <script>
-        document.getElementById('downloadBtn').addEventListener('click', function() {
+        const EXPIRY_SECONDS = {{ expiry_minutes }} * 60;
+        let remaining = EXPIRY_SECONDS;
+
+        const countdownEl = document.getElementById('countdown');
+        const expiryNotice = document.getElementById('expiryNotice');
+        const expiryExpired = document.getElementById('expiryExpired');
+        const btnGroup = document.getElementById('btnGroup');
+        const btnGroupExpired = document.getElementById('btnGroupExpired');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        function updateCountdown() {
+            const min = Math.floor(remaining / 60);
+            const sec = remaining % 60;
+            countdownEl.textContent = min + ':' + String(sec).padStart(2, '0');
+
+            if (remaining <= 60) {
+                expiryNotice.classList.add('warning');
+            }
+
+            if (remaining <= 0) {
+                clearInterval(timer);
+                expiryNotice.style.display = 'none';
+                expiryExpired.style.display = 'flex';
+                btnGroup.style.display = 'none';
+                btnGroupExpired.style.display = 'flex';
+            }
+
+            remaining--;
+        }
+
+        var timer = setInterval(updateCountdown, 1000);
+
+        downloadBtn.addEventListener('click', function() {
             // 延迟 15 秒清理文件，确保下载请求先到达服务器，避免竞态条件
             setTimeout(function() {
                 fetch('{{ url_for("cleanup", name=download_name) }}');
