@@ -174,6 +174,21 @@
             margin-bottom: 20px;
         }
 
+        .comment-tip {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            font-size: 12px;
+            color: #64748b;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .comment-tip svg { flex-shrink: 0; margin-top: 1px; }
+
         .footer {
             text-align: center;
             padding: 20px;
@@ -213,6 +228,11 @@
             </div>
             <div class="btn-group" id="btnGroupExpired" style="display:none;">
                 <a href="{{ url_for('index') }}" class="btn btn-primary">重新上传文件</a>
+            </div>
+
+<div class="comment-tip">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <span>如需删除文档批注，请在 Word 审阅功能中点击"删除该文档所有批注"</span>
             </div>
 
             {% if warnings %}
